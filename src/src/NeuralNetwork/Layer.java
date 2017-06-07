@@ -1,10 +1,11 @@
-package Model.NeuralNetwork;
-
+package NeuralNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.api.rng.Random;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.api.ops.impl.transforms.*;
 import org.nd4j.linalg.ops.transforms.Transforms;
+
+import static java.lang.Math.pow;
 
 
 /**
@@ -29,6 +30,11 @@ public class Layer {
     private INDArray inputArray;
     private Activation.ACTIVATION function;
     private Network net;
+    private INDArray prev_derivative;
+    private INDArray firstMomentum;
+    private  INDArray secondMomentum;
+
+
     public Layer(int input, int output, Activation.ACTIVATION function){
         if(input < 0 || output < 0 || function == null)
             throw  new IllegalArgumentException("input and output must be positive integers and ACTIVATION not null");
@@ -36,7 +42,10 @@ public class Layer {
         this.function = function;
         this.input = input;
         this.output = output;
+        this.prev_derivative = Nd4j.zeros(input,output);
         inputArray = null;
+        this.firstMomentum = Nd4j.zeros(input,output);
+        this.secondMomentum = Nd4j.zeros(input,output);
         initWeights();
         initBias();
         initDelta();
@@ -104,11 +113,11 @@ public class Layer {
                 this.delta = Nd4j.getExecutioner().execAndReturn(new HardTanhDerivative(nonActivated));
                 break;
         }
+
+
         this.delta = this.delta.mul(delta);
 
         INDArray derivative = inputArray.transpose().mmul(this.delta);
-
-
         updateWeight(derivative);
         updateBias();
         return delta.mmul(getWeight().transpose());
@@ -120,10 +129,36 @@ public class Layer {
 
     protected void updateWeight(INDArray derivative) {
 
-        INDArray aux = derivative.mul(net.getLearninRate());
-        aux.mul(-1);
-        aux.add(getWeight().mul(net.getWeightDecay()));
-        weight = weight.add(aux);
+        //INDArray aux = derivative.mul(net.getLearninRate());
+        //aux.mul(-1);
+
+        //calculates the adam momentum
+        INDArray M = firstMomentum.mul(net.getBeta_1()).add(derivative.mul((1-net.getBeta_1())) );
+        INDArray R = secondMomentum.mul(net.getBeta_2()).add(  Transforms.pow(derivative,2).mul( (1-net.getBeta_2()) )  );
+
+        //update the momentum rates
+        firstMomentum = M;
+        secondMomentum = R;
+
+        //now lets tune them with correction bias
+        INDArray Mhat = M.div((1-pow(net.getBeta_1(), net.getCurrentEpoch())));
+        INDArray Rhat = R.div((1-pow(net.getBeta_2(), net.getCurrentEpoch())));
+        //
+        INDArray aux1 = Transforms.sqrt(Rhat).add(net.getEpsilon());
+
+        INDArray aux2 = Mhat.mul(net.getLearninRate());
+        //elementwise operation for division
+        INDArray result = Nd4j.zeros(input, output);
+        for (int i = 0; i < result.rows(); i++) {
+            for (int j = 0; j < result.columns() ; j++) {
+                result.putScalar(new int[]{i,j},aux2.getDouble(i,j) / aux1.getDouble(i,j));
+            }
+        }
+
+        System.out.println("el resultado");
+        System.out.println(result);
+        //aux.add(getWeight().mul(net.getWeightDecay()));// this would be weigh decay
+        weight = weight.add(result);
     }
 
     public INDArray getWeight() {
@@ -147,6 +182,8 @@ public class Layer {
     }
 
 
+
+
     public void setNetwork(Network net){
         if(net == null)
             throw new IllegalArgumentException("neural netwrok not found");
@@ -161,8 +198,6 @@ public class Layer {
     protected INDArray getInputArray() {
         return inputArray;
     }
-
-
 
 
 }

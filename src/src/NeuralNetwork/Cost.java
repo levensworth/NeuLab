@@ -1,4 +1,4 @@
-package Model.NeuralNetwork;
+package NeuralNetwork;
 
 
 import org.nd4j.linalg.api.ndarray.INDArray;

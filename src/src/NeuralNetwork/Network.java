@@ -1,4 +1,4 @@
-package Model.NeuralNetwork;
+package NeuralNetwork;
 /*
 * created by Levensworth
 * info:
@@ -23,8 +23,13 @@ public class Network{
     private INDArray lastActivation;
     private int epoch;
     private Cost costFunction;
+    private double beta_1;
+    private double beta_2;
+    private double epsilon;
+    private long currentEpoch;
 
-    public Network(double learninRate, double momentum, double weightDecay, Activation.ACTIVATION activation, Cost.COST cost, List<Layer> layerList, int epoch) {
+
+    public Network(double learninRate, double momentum, double weightDecay, Activation.ACTIVATION activation, Cost.COST cost, List<Layer> layerList, int epoch, double beta_1, double beta_2, double epsilon) {
         if(learninRate < 0 || momentum < 0 || weightDecay < 0 || activation == null || layerList == null || epoch < 0)
             throw new IllegalArgumentException("the parameters where wrong");
         this.learninRate = learninRate;
@@ -36,9 +41,15 @@ public class Network{
         lastActivation = null;
         this.epoch = epoch;
         costFunction = new Cost(cost);
+        this.beta_1 = beta_1;
+        this.beta_2 = beta_2;
+        this.epsilon = epsilon;
+        this.currentEpoch = 0;
     }
 
-
+    public long getCurrentEpoch(){
+        return currentEpoch;
+    }
     public double getLearninRate() {
         return learninRate;
     }
@@ -78,17 +89,30 @@ public class Network{
         return costFunction.getCost(lastActivation, output);
     }
 
+    public double getBeta_1() {
+        return beta_1;
+    }
+
+    public double getBeta_2() {
+        return beta_2;
+    }
+
+    public double getEpsilon() {
+        return epsilon;
+    }
+
     public void train(INDArray input ,INDArray output){
 
         if(input == null || input.columns() != layerList.get(0).getInput())
             throw  new RuntimeException("the network hasn't been used yet");
         for (int current = 0; current < epoch; current++) {
-
+            currentEpoch++;
             INDArray error  = output.add(predict(input).mul(-1));
             for (int i = layerList.size()-1; i >= 0 ; i--) {
                 error = layerList.get(i).backPropagate(error);
 
             }
+
 
         }
 
