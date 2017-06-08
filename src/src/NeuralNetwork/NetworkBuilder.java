@@ -1,5 +1,6 @@
 package NeuralNetwork;
 
+import NeuralNetwork.Algorithm.Algorithm;
 import sun.nio.ch.Net;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class NetworkBuilder{
     private double beta_1;
     private double beta_2;
     private double epsilon;
+    private Algorithm.ALGORITHMS algorithm;
     public NetworkBuilder(){
         learningRate = 0.01;
         momentum = 0.9;
@@ -42,7 +44,12 @@ public class NetworkBuilder{
         beta_1 = 0.9;
         beta_2 = 0.99;
         epsilon = 0.0000001;
+        algorithm = Algorithm.ALGORITHMS.SGD;
+    }
 
+    public NetworkBuilder setAlgorithm(Algorithm.ALGORITHMS algorithm){
+        this.algorithm = algorithm;
+        return this;
     }
 
     public NetworkBuilder setBeta_1(double beta_1) {
@@ -114,7 +121,7 @@ public class NetworkBuilder{
     public Network build(){
         if(layersList.isEmpty())
             throw  new RuntimeException("there must be at leat two layers specified");
-        Network net = new Network(learningRate, momentum, weightDecay, activation,cost, layersList, epoch,beta_1,beta_2,epsilon);
+        Network net = new Network(learningRate, momentum, weightDecay, activation,cost, layersList, epoch,beta_1,beta_2,epsilon, algorithm);
         for(Layer l : layersList){
             l.setNetwork(net);
         }

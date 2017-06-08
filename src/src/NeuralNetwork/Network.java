@@ -8,6 +8,8 @@ package NeuralNetwork;
 * */
 
 
+import NeuralNetwork.Algorithm.Adam;
+import NeuralNetwork.Algorithm.Algorithm;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.util.List;
@@ -27,9 +29,12 @@ public class Network{
     private double beta_2;
     private double epsilon;
     private long currentEpoch;
+    private Algorithm.ALGORITHMS algorithm;
 
 
-    public Network(double learninRate, double momentum, double weightDecay, Activation.ACTIVATION activation, Cost.COST cost, List<Layer> layerList, int epoch, double beta_1, double beta_2, double epsilon) {
+    public Network(double learninRate, double momentum, double weightDecay, Activation.ACTIVATION activation,
+                   Cost.COST cost, List<Layer> layerList, int epoch, double beta_1, double beta_2, double epsilon,
+                   Algorithm.ALGORITHMS algorithm) {
         if(learninRate < 0 || momentum < 0 || weightDecay < 0 || activation == null || layerList == null || epoch < 0)
             throw new IllegalArgumentException("the parameters where wrong");
         this.learninRate = learninRate;
@@ -45,6 +50,7 @@ public class Network{
         this.beta_2 = beta_2;
         this.epsilon = epsilon;
         this.currentEpoch = 0;
+        this.algorithm = algorithm;
     }
 
     public long getCurrentEpoch(){
@@ -89,6 +95,10 @@ public class Network{
         return costFunction.getCost(lastActivation, output);
     }
 
+
+    public Algorithm.ALGORITHMS getAlgorithm(){
+        return algorithm;
+    }
     public double getBeta_1() {
         return beta_1;
     }
@@ -100,6 +110,8 @@ public class Network{
     public double getEpsilon() {
         return epsilon;
     }
+
+
 
     public void train(INDArray input ,INDArray output){
 

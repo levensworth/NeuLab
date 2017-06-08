@@ -1,6 +1,7 @@
 package NeuralNetwork;
 
 
+import NeuralNetwork.Algorithm.Algorithm;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -63,6 +64,7 @@ public class API {
                 .setLearningRate(0.1)
                 .setWeightDecay(0.95)
                 .setMomentum(0.2)
+                .setAlgorithm(Algorithm.ALGORITHMS.SGD)
                 .build();
 
 
